@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+A#!/usr/bin/env python3
 """
 Agent Financiar - fabricacucadouri.ro
 Citeste zilnic Gmail-ul, proceseaza facturile PDF cu AI
@@ -17,7 +17,7 @@ import requests
 CONFIG = {
     "gmail_user":         os.environ.get("GMAIL_USER", "fabricacucadouri@gmail.com"),
     "gmail_password":     os.environ.get("GMAIL_PASSWORD", ""),
-    "anthropic_api_key":  os.environ.get("ANTHROPIC_API_KEY", ""),
+    "anthropic_api_key":  "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",
     "oblio_api_key":      os.environ.get("OBLIO_API_KEY", ""),
     "mp_user":            os.environ.get("MP_USER", ""),
     "mp_password":        os.environ.get("MP_PASSWORD", ""),
