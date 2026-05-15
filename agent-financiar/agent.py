@@ -12,15 +12,15 @@ import anthropic
 import requests
 
 # ============================================================
-# CONFIGURARE
+# CONFIGURARE - citeste din variabilele de mediu Railway
 # ============================================================
 CONFIG = {
-    "gmail_user":         "fabricacucadouri@gmail.com",
-    "gmail_password":     "vddw fedb nygk ytid",
-    "anthropic_api_key":  "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",
-    "oblio_api_key":      "adab3f3a82acfd9965da74cb27ebc927c5b4ed8b",
-    "mp_user":            "882da5e6de986f8c4277c314bcb5f333",
-    "mp_password":        "i33iEJPB42fNAuXJHDnWPpDCY",
+    "gmail_user":         os.environ.get("GMAIL_USER", "fabricacucadouri@gmail.com"),
+    "gmail_password":     os.environ.get("GMAIL_PASSWORD", ""),
+    "anthropic_api_key":  "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",
+    "oblio_api_key":      os.environ.get("OBLIO_API_KEY", ""),
+    "mp_user":            os.environ.get("MP_USER", ""),
+    "mp_password":        os.environ.get("MP_PASSWORD", ""),
     "zile_cautare":       7,
     "db_path":            "financiar.db",
 }
@@ -81,7 +81,6 @@ def init_db():
         procesat_la TEXT
     );
     """)
-    # Initializeaza stocurile daca nu exista
     for m in MATERIALE:
         cur.execute("INSERT OR IGNORE INTO stoc(material,cantitate,actualizat) VALUES(?,0,?)",
                     (m, datetime.now().isoformat()))
@@ -122,7 +121,6 @@ def get_gmail_pdfs():
             msg = email.message_from_bytes(data[0][1])
             msg_id = msg.get("Message-ID","") or str(num)
 
-            # Skip deja procesate
             cur.execute("SELECT 1 FROM emailuri_procesate WHERE message_id=?", (msg_id,))
             if cur.fetchone():
                 continue
@@ -235,7 +233,6 @@ def salveaza_document(pdf_info, date_ai):
         con = get_db()
         cur = con.cursor()
 
-        # Salveaza documentul
         cur.execute("""
             INSERT INTO documente(tip,furnizor,numar,data_doc,total,moneda,procesat_la,email_subiect,raw_json)
             VALUES(?,?,?,?,?,?,?,?,?)
@@ -252,7 +249,6 @@ def salveaza_document(pdf_info, date_ai):
         ))
         doc_id = cur.lastrowid
 
-        # Salveaza liniile si actualizeaza stocul
         for linie in date_ai.get("linii", []):
             cur.execute("""
                 INSERT INTO linii(document_id,nume,cantitate,unitate,pret_unitar,total)
@@ -266,7 +262,6 @@ def salveaza_document(pdf_info, date_ai):
                 linie.get("total",0)
             ))
 
-            # Actualizeaza stocul daca e material cunoscut
             material_stoc = linie.get("material_stoc")
             if material_stoc and date_ai.get("tip") == "factura_furnizor":
                 cantitate = linie.get("cantitate", 0)
@@ -277,7 +272,6 @@ def salveaza_document(pdf_info, date_ai):
                 if cur.rowcount > 0:
                     log(f"  Stoc actualizat: {material_stoc} +{cantitate}")
 
-        # Marcheaza emailul ca procesat
         cur.execute("INSERT OR IGNORE INTO emailuri_procesate VALUES(?,?)",
                     (pdf_info["message_id"], datetime.now().isoformat()))
 
@@ -300,7 +294,6 @@ def get_stats_json():
 
     luna_curenta = datetime.now().strftime("%Y-%m")
 
-    # Total cheltuieli luna curenta (facturi furnizori + curierat)
     cur.execute("""
         SELECT COALESCE(SUM(total),0) FROM documente
         WHERE tip IN ('factura_furnizor','factura_curier','altele')
@@ -308,21 +301,18 @@ def get_stats_json():
     """, (f"{luna_curenta}%",))
     cheltuieli_luna = cur.fetchone()[0]
 
-    # Total incasari DPD luna curenta
     cur.execute("""
         SELECT COALESCE(SUM(total),0) FROM documente
         WHERE tip = 'borderou_dpd' AND data_doc LIKE ?
     """, (f"{luna_curenta}%",))
     incasari_dpd = cur.fetchone()[0]
 
-    # Total incasari Netopia luna curenta
     cur.execute("""
         SELECT COALESCE(SUM(total),0) FROM documente
         WHERE tip = 'raport_netopia' AND data_doc LIKE ?
     """, (f"{luna_curenta}%",))
     incasari_netopia = cur.fetchone()[0]
 
-    # Toate documentele
     cur.execute("""
         SELECT id, tip, furnizor, numar, data_doc, total, moneda, procesat_la
         FROM documente ORDER BY procesat_la DESC LIMIT 50
@@ -331,12 +321,10 @@ def get_stats_json():
               "data":r[4],"total":r[5],"moneda":r[6],"procesat_la":r[7]}
             for r in cur.fetchall()]
 
-    # Stocuri
     cur.execute("SELECT material, cantitate, unitate, actualizat FROM stoc ORDER BY material")
     stocuri = [{"material":r[0],"cantitate":r[1],"unitate":r[2],"actualizat":r[3]}
                for r in cur.fetchall()]
 
-    # Cheltuieli pe luna (ultimele 6 luni)
     cur.execute("""
         SELECT strftime('%Y-%m', data_doc) as luna, SUM(total)
         FROM documente WHERE tip IN ('factura_furnizor','factura_curier')
@@ -384,7 +372,6 @@ def ruleaza():
         else:
             log(f"Nu s-au putut extrage date din: {pdf['fisier']}", "WARN")
 
-    # Salveaza stats pentru dashboard
     stats = get_stats_json()
     with open("stats.json","w",encoding="utf-8") as f:
         json.dump(stats, f, ensure_ascii=False, indent=2)
