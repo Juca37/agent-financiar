@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Financiar — Fabrica cu Cadouri</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F4F0;--s:#FFF;--s2:#F0EDE8;--border:#E2DDD8;--text:#1A1714;--t2:#6B645C;--t3:#9E988F;--accent:#C8593A;--al:#F5EAE6;--green:#2D7A4F;--gl:#E6F4EC;--amber:#B8610A;--ambl:#FEF3E6;--red:#C0392B;--rl:#FDECEA;--blue:#1A56DB;--bl:#EBF5FF;--r:12px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:var(--text);color:#fff;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:50}
+.logo{font-size:15px;font-weight:600;letter-spacing:-.3px}.logo span{color:#C8593A}
+.header-right{display:flex;align-items:center;gap:12px}
+.last-run{font-size:11px;color:rgba(255,255,255,.45);font-family:'DM Mono',monospace}
+.btn-run{padding:6px 14px;background:#C8593A;color:#fff;border:none;border-radius:var(--rs);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-run:hover{opacity:.9}
+.btn-run:disabled{opacity:.5;cursor:wait}
+.wrap{max-width:960px;margin:0 auto;padding:1.5rem}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem}
+.stat{background:var(--s);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem}
+.stat .lbl{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-weight:500;margin-bottom:8px}
+.stat .val{font-size:26px;font-weight:600;font-family:'DM Mono',monospace;line-height:1}
+.stat .sub{font-size:12px;color:var(--t2);margin-top:6px}
+.val.green{color:var(--green)}.val.red{color:var(--red)}.val.amber{color:var(--amber)}.val.blue{color:var(--blue)}
+.tabs{display:flex;gap:4px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:4px;margin-bottom:1.25rem}
+.tab{flex:1;padding:9px 8px;border:none;background:transparent;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .15s}
+.tab.active{background:var(--s);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.section{display:none}.section.active{display:block}
+.card{background:var(--s);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1rem}
+.card-header{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-header h3{font-size:12px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 1.25rem;color:var(--t3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--s2)}
+td{padding:11px 1.25rem;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--s2)}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-furnizor{background:var(--ambl);color:var(--amber)}
+.badge-dpd{background:var(--bl);color:var(--blue)}
+.badge-netopia{background:var(--gl);color:var(--green)}
+.badge-curier{background:var(--s2);color:var(--t2)}
+.badge-altele{background:var(--s2);color:var(--t2)}
+.badge-ok{background:var(--gl);color:var(--green)}
+.badge-warn{background:var(--ambl);color:var(--amber)}
+.badge-empty{background:var(--rl);color:var(--red)}
+.mono{font-family:'DM Mono',monospace;font-weight:500}
+.cat-row td{background:var(--s2);color:var(--t2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:7px 1.25rem}
+.search{width:100%;padding:10px 16px;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;background:var(--s);color:var(--text);outline:none;margin-bottom:1rem}
+.search:focus{border-color:var(--t3)}
+.empty{text-align:center;padding:3rem;color:var(--t3);font-size:14px}
+.loading{text-align:center;padding:2rem;color:var(--t3);font-size:13px}
+.tip-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-row .label{color:var(--t2)}
+.info-row .value{font-weight:500;font-family:'DM Mono',monospace}
+.alert{padding:.875rem 1.25rem;border-radius:var(--r);font-size:13px;margin-bottom:1rem}
+.alert-warn{background:var(--ambl);color:var(--amber);border:1px solid #F5C947}
+@media(max-width:600px){.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}.grid2{grid-template-columns:1fr}.wrap{padding:1rem}.tabs{overflow-x:auto}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="logo">Fabrica cu <span>Cadouri</span> — Financiar</div>
+  <div class="header-right">
+    <span class="last-run" id="last-run">se incarca...</span>
+    <button class="btn-run" onclick="ruleazaAgent()" id="btn-run">▶ Ruleaza acum</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats" id="stats-bar">
+    <div class="stat"><div class="lbl">Total incasat luna aceasta</div><div class="val green" id="s-incasat">—</div><div class="sub" id="s-incasat-sub">DPD + Netopia</div></div>
+    <div class="stat"><div class="lbl">Total cheltuit luna aceasta</div><div class="val amber" id="s-cheltuit">—</div><div class="sub">Facturi furnizori</div></div>
+    <div class="stat"><div class="lbl">Profit estimat</div><div class="val" id="s-profit">—</div><div class="sub">Incasat - Cheltuit</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('documente',this)">📄 Documente</button>
+    <button class="tab" onclick="showTab('stoc',this)">📦 Stoc materiale</button>
+    <button class="tab" onclick="showTab('sumar',this)">📊 Sumar lunar</button>
+  </div>
+
+  <div id="tab-documente" class="section active">
+    <input class="search" type="text" placeholder="Cauta furnizor, numar factura..." id="search-docs" oninput="renderDocs()">
+    <div id="docs-content"><div class="loading">Se incarca documentele...</div></div>
+  </div>
+
+  <div id="tab-stoc" class="section">
+    <input class="search" type="text" placeholder="Cauta material..." id="search-stoc" oninput="renderStoc()">
+    <div id="stoc-content"><div class="loading">Se incarca stocul...</div></div>
+  </div>
+
+  <div id="tab-sumar" class="section">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><h3>Incasari luna curenta</h3></div>
+        <div style="padding:1.25rem" id="sumar-incasari"></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Cheltuieli luna curenta</h3></div>
+        <div style="padding:1.25rem" id="sumar-cheltuieli"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Cheltuieli pe luni</h3></div>
+      <div style="padding:1.25rem" id="sumar-history"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let DATA = null;
+
+function badgeTip(tip){
+  const map={
+    'factura_furnizor':'<span class="badge badge-furnizor">Furnizor</span>',
+    'borderou_dpd':'<span class="badge badge-dpd">DPD Ramburs</span>',
+    'raport_netopia':'<span class="badge badge-netopia">Netopia Card</span>',
+    'factura_curier':'<span class="badge badge-curier">Curier</span>',
+    'altele':'<span class="badge badge-altele">Altele</span>',
+  };
+  return map[tip]||`<span class="badge badge-altele">${tip}</span>`;
+}
+
+function badgeStoc(m){
+  if(m.cantitate===0) return '<span class="badge badge-empty">Fara stoc</span>';
+  return '<span class="badge badge-ok">In stoc</span>';
+}
+
+function ron(v){return (v||0).toLocaleString('ro-RO',{minimumFractionDigits:2,maximumFractionDigits:2})+' RON';}
+
+function renderStats(){
+  if(!DATA) return;
+  document.getElementById('s-incasat').textContent = ron(DATA.total_incasat);
+  document.getElementById('s-cheltuit').textContent = ron(DATA.cheltuieli_luna);
+  const p = DATA.profit_estimat;
+  const pel = document.getElementById('s-profit');
+  pel.textContent = ron(p);
+  pel.className = 'val '+(p>=0?'green':'red');
+  document.getElementById('s-incasat-sub').textContent =
+    `DPD: ${ron(DATA.incasari_dpd)} + Card: ${ron(DATA.incasari_netopia)}`;
+  if(DATA.ultima_rulare){
+    const d = new Date(DATA.ultima_rulare);
+    document.getElementById('last-run').textContent = 'Ultima rulare: '+d.toLocaleString('ro-RO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+function renderDocs(){
+  if(!DATA||!DATA.documente) return;
+  const q = document.getElementById('search-docs').value.toLowerCase();
+  const docs = DATA.documente.filter(d=>
+    (d.furnizor||'').toLowerCase().includes(q)||
+    (d.numar||'').toLowerCase().includes(q)||
+    (d.tip||'').toLowerCase().includes(q)
+  );
+  if(!docs.length){document.getElementById('docs-content').innerHTML='<div class="empty">Nu s-au gasit documente.</div>';return;}
+  let html='<div class="card"><table><thead><tr><th>Tip</th><th>Furnizor</th><th>Nr. document</th><th>Data</th><th style="text-align:right">Total</th></tr></thead><tbody>';
+  docs.forEach(d=>{
+    html+=`<tr>
+      <td>${badgeTip(d.tip)}</td>
+      <td style="font-weight:500">${d.furnizor||'—'}</td>
+      <td class="mono" style="color:var(--t2)">${d.numar||'—'}</td>
+      <td style="color:var(--t2);font-size:12px">${d.data||'—'}</td>
+      <td style="text-align:right" class="mono">${ron(d.total)}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('docs-content').innerHTML=html;
+}
+
+function renderStoc(){
+  if(!DATA||!DATA.stocuri) return;
+  const q = document.getElementById('search-stoc').value.toLowerCase();
+  const stoc = DATA.stocuri.filter(s=>s.material.toLowerCase().includes(q));
+
+  // Grupeaza
+  const grupe={};
+  stoc.forEach(s=>{
+    const cat = s.material.startsWith('Sasiu')?'Sasiu canvas':
+                s.material.startsWith('Rama')?'Rame foto':
+                s.material.startsWith('Hartie canvas')?'Hartie canvas':
+                s.material.startsWith('Carton')?'Carton colorat':
+                s.material.startsWith('Hartie foto')?'Hartie foto':'Hartie / Carton';
+    if(!grupe[cat]) grupe[cat]=[];
+    grupe[cat].push(s);
+  });
+
+  let html='<div class="card"><table><thead><tr><th>Material</th><th>Cantitate</th><th>Status</th></tr></thead><tbody>';
+  Object.keys(grupe).forEach(cat=>{
+    html+=`<tr class="cat-row"><td colspan="3">${cat}</td></tr>`;
+    grupe[cat].forEach(s=>{
+      html+=`<tr>
+        <td style="font-weight:500">${s.material}</td>
+        <td class="mono">${s.cantitate} ${s.unitate||'buc'}</td>
+        <td>${badgeStoc(s)}</td>
+      </tr>`;
+    });
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('stoc-content').innerHTML=html;
+}
+
+function renderSumar(){
+  if(!DATA) return;
+
+  // Incasari
+  let html='';
+  html+=`<div class="info-row"><span class="label">Rambursuri DPD</span><span class="value">${ron(DATA.incasari_dpd)}</span></div>`;
+  html+=`<div class="info-row"><span class="label">Plati card (Netopia)</span><span class="value">${ron(DATA.incasari_netopia)}</span></div>`;
+  html+=`<div class="info-row"><span class="label" style="font-weight:600">TOTAL INCASAT</span><span class="value" style="color:var(--green)">${ron(DATA.total_incasat)}</span></div>`;
+  document.getElementById('sumar-incasari').innerHTML=html;
+
+  // Cheltuieli
+  html='';
+  html+=`<div class="info-row"><span class="label">Facturi furnizori</span><span class="value">${ron(DATA.cheltuieli_luna)}</span></div>`;
+  html+=`<div class="info-row"><span class="label" style="font-weight:600">TOTAL CHELTUIT</span><span class="value" style="color:var(--amber)">${ron(DATA.cheltuieli_luna)}</span></div>`;
+  document.getElementById('sumar-cheltuieli').innerHTML=html;
+
+  // History
+  if(DATA.cheltuieli_history&&DATA.cheltuieli_history.length){
+    html='<table><thead><tr><th>Luna</th><th style="text-align:right">Total cheltuit</th></tr></thead><tbody>';
+    DATA.cheltuieli_history.forEach(h=>{
+      html+=`<tr><td>${h.luna}</td><td style="text-align:right" class="mono">${ron(h.total)}</td></tr>`;
+    });
+    html+='</tbody></table>';
+  } else {
+    html='<div class="empty">Nu sunt date istorice inca.</div>';
+  }
+  document.getElementById('sumar-history').innerHTML=html;
+}
+
+function showTab(t,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  btn.classList.add('active');
+}
+
+async function loadData(){
+  try{
+    const r = await fetch('/api/stats');
+    DATA = await r.json();
+    renderStats();
+    renderDocs();
+    renderStoc();
+    renderSumar();
+  } catch(e){
+    console.error('Eroare:', e);
+    document.getElementById('docs-content').innerHTML='<div class="empty">Eroare la incarcarea datelor. Verifica conexiunea.</div>';
+  }
+}
+
+async function ruleazaAgent(){
+  const btn = document.getElementById('btn-run');
+  btn.disabled=true;
+  btn.textContent='Se ruleaza...';
+  try{
+    const r = await fetch('/api/ruleaza');
+    const d = await r.json();
+    if(d.ok){
+      DATA=d.stats;
+      renderStats();renderDocs();renderStoc();renderSumar();
+      btn.textContent='✓ Gata!';
+      setTimeout(()=>{btn.textContent='▶ Ruleaza acum';btn.disabled=false;},3000);
+    }
+  } catch(e){
+    btn.textContent='Eroare!';
+    setTimeout(()=>{btn.textContent='▶ Ruleaza acum';btn.disabled=false;},3000);
+  }
+}
+
+loadData();
+setInterval(loadData, 300000); // refresh la 5 minute
+</script>
+</body>
+</html>
